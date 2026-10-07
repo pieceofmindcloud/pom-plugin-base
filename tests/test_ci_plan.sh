@@ -20,8 +20,8 @@ workflow="$root/.github/workflows/publish-release.yml"
 [[ -f "$workflow" ]] || fail 'workflow is missing'
 [[ "$(find "$root/.github/workflows" -maxdepth 1 -name '*.yml' | wc -l | tr -d ' ')" == 1 ]] || fail 'expected one workflow'
 grep -q '^name: Publish plugin release$' "$workflow" || fail 'workflow name'
-# POM - Plugins is public: releases live only on GitHub, never on the license server.
-grep -q 'license-server\|POM_RELEASE_TOKEN\|POM_RELEASE_API' "$workflow" && fail 'workflow must not publish to the license server'
+# Stable releases also go to the license server, POM's fallback for GitHub.
+grep -q 'POM_RELEASE_TOKEN' "$workflow" || fail 'workflow must publish stable releases to the license server'
 grep -q 'softprops/action-gh-release' "$workflow" || fail 'GitHub release step is missing'
 grep -q 'pom-plugin-\${{ matrix.platform }}.json' "$workflow" || fail 'public update manifest must be attached'
 grep -q 'max-parallel: 1' "$workflow" || fail 'same-tag releases must be serialized'

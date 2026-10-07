@@ -312,10 +312,12 @@ fn release_manifest_provides_typed_default_preference_examples() {
     );
     assert!(!package.contains("del(.schema)"));
     assert!(package.contains(".preferences"));
-    // A public plugin: releases go to GitHub only.
-    assert!(!root().join("scripts/publish-to-license-server.sh").exists());
+    // A stable release goes to GitHub and to the license server, POM's
+    // fallback when GitHub refuses or rate-limits a download.
+    assert!(root().join("scripts/publish-to-license-server.sh").exists());
     let workflow = text(".github/workflows/publish-release.yml");
-    assert!(!workflow.contains("license-server") && !workflow.contains("POM_RELEASE_TOKEN"));
+    assert!(workflow.contains("license-server") && workflow.contains("POM_RELEASE_TOKEN"));
+    assert!(workflow.contains("if: ${{ !inputs.prerelease }}"));
 }
 
 #[test]
