@@ -120,3 +120,35 @@ jobs:
           prerelease: ${{ inputs.prerelease }}
           files: packages/*
 
+  license-server:
+    name: License server ${{ matrix.name }} ${{ matrix.version }}
+    needs: [plan, release]
+    # Prereleases stay on GitHub only.
+    if: ${{ !inputs.prerelease }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download package from the GitHub release
+        shell: bash
+        run: |
+          mkdir -p dist-release
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir dist-release --pattern "pom-plugin-base-${PLATFORM}.*"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ matrix.version }}
+          PLATFORM: ${{ matrix.platform }}
+      - name: Publish package to the license server
+        shell: bash
+        run: ./scripts/publish-to-license-server.sh --version "$RELEASE_TAG" --platform "$PLATFORM" --artifact "$ARTIFACT" --metadata "$METADATA" --reason "release $RELEASE_TAG"
+        env:
+          RELEASE_TAG: ${{ matrix.version }}
+          PLATFORM: ${{ matrix.platform }}
+          ARTIFACT: dist-release/pom-plugin-base-${{ matrix.platform }}.${{ matrix.ext }}
+          METADATA: dist-release/pom-plugin-base-${{ matrix.platform }}.metadata.json
+          POM_RELEASE_TOKEN: ${{ secrets.POM_RELEASE_TOKEN }}
+          POM_RELEASE_API: ${{ secrets.POM_RELEASE_API }}
