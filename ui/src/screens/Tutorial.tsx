@@ -13,6 +13,7 @@ import {
   type NotificationResponse,
   type PomEvent,
 } from "../host/runtime";
+import { useScreenReady } from "../host/ready";
 
 const STEPS = ["one", "two", "three", "four", "five"] as const;
 const FEATURES = [
@@ -63,6 +64,10 @@ export function Tutorial() {
   const [busy, setBusy] = useState<string | null>(null);
   const [backend, setBackend] = useState<BackendEvents>({ status: "idle", events: [] });
   const revealRef = useReveal<HTMLElement>();
+  // Everything this screen draws on mount is static: the events list starts in
+  // its real empty state and the backend answer only loads on click, so the
+  // screen is ready as soon as it mounts.
+  useScreenReady(true);
 
   usePomEvent("*", (event) => {
     setEvents((current) => [event, ...current.filter((item) => item.id !== event.id)].slice(0, MAX_EVENTS));

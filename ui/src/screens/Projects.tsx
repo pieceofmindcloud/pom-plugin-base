@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPluginApi, usePluginI18n } from "../host/runtime";
+import { useScreenReady } from "../host/ready";
 
 type WorkspaceStatus = "loading" | "unavailable" | "empty" | "ready";
 
@@ -62,6 +63,9 @@ export function Projects() {
   const { t } = usePluginI18n();
   const workspace = useWorkspace();
   const description = t("projects.body");
+  // The workspace list is what this screen is for: the host opens it when the
+  // answer arrived (or failed), not over the loading card.
+  useScreenReady(workspace.status !== "loading");
 
   return (
     <main className="pb-page">
