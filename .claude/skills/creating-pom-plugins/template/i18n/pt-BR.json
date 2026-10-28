@@ -1,0 +1,17 @@
+{
+  "main.title": "__NAME__",
+  "main.subtitle": "O que o POM informou a este plugin.",
+  "main.loading": "Consultando o plugin...",
+  "main.gateway": "Gateway de modelos",
+  "main.workspace": "Workspace",
+  "main.dataDirectory": "Diretório de dados",
+  "main.ingested": "Eventos recebidos",
+  "main.events": "Eventos recentes",
+  "main.noEvents": "Nenhum evento ainda.",
+  "main.clear": "Limpar eventos",
+  "main.notify": "Enviar um aviso",
+  "main.notice": "Olá do __NAME__.",
+  "main.yes": "configurado",
+  "main.no": "não configurado",
+  "main.none": "nenhum"
+}

@@ -1,0 +1,154 @@
+name: Publish plugin release
+
+on:
+  workflow_dispatch:
+    inputs:
+      linux:
+        description: Release Linux x86_64
+        type: boolean
+        default: false
+      version_linux:
+        description: Linux version tag, for example v0.1.0
+        type: string
+        default: ''
+      macos:
+        description: Release macOS arm64
+        type: boolean
+        default: false
+      version_macos:
+        description: macOS version tag, for example v0.1.0
+        type: string
+        default: ''
+      windows:
+        description: Release Windows x86_64
+        type: boolean
+        default: false
+      version_windows:
+        description: Windows version tag, for example v0.1.0
+        type: string
+        default: ''
+      prerelease:
+        description: Mark the GitHub release as a prerelease
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: plan
+        shell: bash
+        run: echo "matrix=$(./scripts/ci-plan.sh)" >> "$GITHUB_OUTPUT"
+        env:
+          RELEASE_LINUX: ${{ inputs.linux }}
+          RELEASE_MACOS: ${{ inputs.macos }}
+          RELEASE_WINDOWS: ${{ inputs.windows }}
+          VERSION_LINUX: ${{ inputs.version_linux }}
+          VERSION_MACOS: ${{ inputs.version_macos }}
+          VERSION_WINDOWS: ${{ inputs.version_windows }}
+
+  build:
+    name: Build ${{ matrix.name }} ${{ matrix.version }}
+    needs: plan
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Build and package
+        shell: bash
+        run: ./scripts/package.sh --platform "$PLATFORM" --version "${RELEASE_TAG#v}"
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          RELEASE_TAG: ${{ matrix.version }}
+      - name: Test
+        shell: bash
+        run: cargo test --locked
+        env:
+          POM_UI_REQUIRE_DIST: '1'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-${{ matrix.name }}
+          path: |
+            dist-release/__REPO__-${{ matrix.platform }}.${{ matrix.ext }}
+            dist-release/__REPO__-${{ matrix.platform }}.metadata.json
+            dist-release/pom-plugin-${{ matrix.platform }}.json
+          if-no-files-found: error
+          # Os pacotes só passam entre as etapas; a release guarda os definitivos.
+          retention-days: 1
+
+  release:
+    name: Release ${{ matrix.name }} ${{ matrix.version }}
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: plugin-${{ matrix.name }}
+          path: packages
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ matrix.version }}
+          name: ${{ matrix.version }}
+          prerelease: ${{ inputs.prerelease }}
+          files: packages/*
+
+  license-server:
+    name: License server ${{ matrix.name }} ${{ matrix.version }}
+    needs: [plan, release]
+    # Prereleases stay on GitHub only.
+    if: ${{ !inputs.prerelease }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download package from the GitHub release
+        shell: bash
+        run: |
+          mkdir -p dist-release
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir dist-release --pattern "__REPO__-${PLATFORM}.*"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ matrix.version }}
+          PLATFORM: ${{ matrix.platform }}
+      - name: Publish package to the license server
+        shell: bash
+        run: ./scripts/publish-to-license-server.sh --version "$RELEASE_TAG" --platform "$PLATFORM" --artifact "$ARTIFACT" --metadata "$METADATA" --reason "release $RELEASE_TAG"
+        env:
+          RELEASE_TAG: ${{ matrix.version }}
+          PLATFORM: ${{ matrix.platform }}
+          ARTIFACT: dist-release/__REPO__-${{ matrix.platform }}.${{ matrix.ext }}
+          METADATA: dist-release/__REPO__-${{ matrix.platform }}.metadata.json
+          POM_RELEASE_TOKEN: ${{ secrets.POM_RELEASE_TOKEN }}
+          POM_RELEASE_API: ${{ secrets.POM_RELEASE_API }}

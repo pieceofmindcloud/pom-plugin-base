@@ -1,0 +1,52 @@
+{
+  "schema": "pom-plugin-ui/v1",
+  "plugin_code": "__CODE__",
+  "lifecycle": "resident",
+  "icon_image": "ui/icon.png",
+  "description": {
+    "en": "__NAME__ for the POM.",
+    "pt-BR": "__NAME__ para o POM."
+  },
+  "screenshots": ["docs/screenshots/main.png"],
+  "documentation": {
+    "guides": [
+      {
+        "id": "getting-started",
+        "title": {"en": "Getting started", "pt-BR": "Primeiros passos"},
+        "asset": "docs/getting-started.md"
+      }
+    ],
+    "reference": []
+  },
+  "menu": [
+    {
+      "id": "__CODE__",
+      "label": {"en": "__NAME__", "pt-BR": "__NAME__"},
+      "icon": "blocks",
+      "to": "/main"
+    }
+  ],
+  "routes": [
+    {"path": "/main", "screen": "main", "full_bleed": false}
+  ],
+  "screens": {
+    "main": {"module": "ui/screens.js", "export": "main", "styles": ["ui/plugin.css"]}
+  },
+  "i18n": {
+    "en": "i18n/en.json",
+    "pt-BR": "i18n/pt-BR.json"
+  },
+  "development": {
+    "rebuild": [
+      {"run": ["scripts/dev-ui.sh"], "os": ["linux", "macos"]}
+    ]
+  },
+  "assets": [
+    "ui/screens.js",
+    "ui/plugin.css",
+    "ui/icon.png",
+    "i18n/en.json",
+    "i18n/pt-BR.json",
+    "docs/getting-started.md"
+  ]
+}

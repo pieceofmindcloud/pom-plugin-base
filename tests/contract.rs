@@ -373,7 +373,11 @@ fn repository_text_avoids_unrelated_product_terms() {
             .file_name()
             .and_then(|part| part.to_str())
             .unwrap_or_default();
-        if [".git", "target", "node_modules", "dist", "dist-release"].contains(&name) {
+        // `.claude/skills/creating-pom-plugins` is a verbatim copy of the POM
+        // repository's plugin skill, which covers every kind of plugin.
+        if [".git", "target", "node_modules", "dist", "dist-release"].contains(&name)
+            || path.ends_with(".claude/skills/creating-pom-plugins")
+        {
             continue;
         }
         if path.is_dir() {

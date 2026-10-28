@@ -22,7 +22,10 @@ docs/                    Guides shown in plugin documentation
 docs/screenshots/        Screenshots listed in the manifest, loaded by the POM from GitHub
 i18n/                    en and pt-BR catalogs
 scripts/                 UI, native build, and package commands
+.claude/skills/creating-pom-plugins/  Copy of the POM's plugin skill: scaffold, template, contract reference, recipes
 ```
+
+To start a new plugin, use the bundled skill instead of renaming this tutorial by hand: `bash .claude/skills/creating-pom-plugins/scripts/new-plugin.sh ../pom-plugin-<name> --code <plugin_code> --name "<Display Name>"`. An agent (Claude Code, Codex, Pi) working in this repository picks the skill up from `.claude/skills/`; `SKILL.md` is its entry point.
 
 The UI manifest sets `plugin_code` to `base`, registers `ui/icon.png` as the plugin-owned menu image, declares a localized `description` and the `screenshots` shown on the POM Plugins screen, and lists the Markdown files under `docs/` for the POM documentation view. The single menu item has `children`, so the POM draws a sidebar section with the **Plugin** and **Projects** submenus; the parent keeps `to` so hosts without submenu support still show one entry. Screenshots are paths relative to the repository root: the POM turns them into `raw.githubusercontent.com` URLs, so they are never embedded or sent through the license server. The exported C entry point is `pom_base_plugin_v1`. Release metadata lives separately in `release/manifest.json`: it declares the namespaced `base.core` capability and example local preferences, one boolean feature toggle and one storage directory. The UI manifest remains the `pom-plugin-ui/v1` contract and does not carry license or release preferences.
 

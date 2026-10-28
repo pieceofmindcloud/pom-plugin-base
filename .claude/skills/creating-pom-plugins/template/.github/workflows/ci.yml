@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Build UI assets
+        run: scripts/build-ui.sh
+      - name: Rust checks
+        run: cargo test --locked && cargo fmt --check && cargo clippy --locked --all-targets -- -D warnings
+        env:
+          POM_UI_REQUIRE_DIST: '1'
+      - name: Release plan
+        run: tests/test_ci_plan.sh
