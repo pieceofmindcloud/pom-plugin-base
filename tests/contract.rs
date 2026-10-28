@@ -186,9 +186,14 @@ fn catalogs_assets_and_screen_text_keys_are_complete() {
         "events",
         "notifications",
         "store",
+        "loader",
     ] {
         used.insert(format!("features.{feature}.title"));
         used.insert(format!("features.{feature}.body"));
+    }
+    // The steps of the simulated install (`LOADER_STEPS`).
+    for step in ["download", "unpack", "configure"] {
+        used.insert(format!("demo.loaderStep.{step}"));
     }
     for action in ["delivered", "failed", "accepted", "cancelled"] {
         used.insert(format!("demo.response.{action}"));

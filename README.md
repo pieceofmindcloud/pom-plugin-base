@@ -4,7 +4,7 @@ The public starter and tutorial for building plugins for the POM. It shows the h
 
 The plugin appears in the POM sidebar as **POM - Plugins**, with the POM icon and two submenus:
 
-- **Plugin**: the tutorial. How to build a plugin in five steps, every feature a plugin can use, and a live demo that sends a notice to this user, a notice to the whole network, and an Accept or Cancel question whose answer comes back to the screen. It also shows the events received by the screen (language, theme) and by the native backend (`host.event`).
+- **Plugin**: the tutorial. How to build a plugin in five steps, every feature a plugin can use, and a live demo that sends a notice to this user, a notice to the whole network, and an Accept or Cancel question whose answer comes back to the screen. Two more buttons run a simulated install under POM's own loader (`loader.show`, `loader.progress`, `loader.error`, `loader.success`, host version 7), one of them failing so its **Try again** (`loader.retry`) can be seen. It also shows the events received by the screen (language, theme) and by the native backend (`host.event`).
 - **Projects**: the shared workspace project list, a small screen to copy when starting a new view.
 
 ## Project layout

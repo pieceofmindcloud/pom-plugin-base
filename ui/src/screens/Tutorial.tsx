@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useReveal } from "./reveal";
 import {
   assetUrl,
@@ -6,7 +6,9 @@ import {
   EVENTS_PROTOCOL,
   getPluginApi,
   hostVersion,
+  loader,
   notify,
+  onLoaderRetry,
   usePluginI18n,
   usePomContext,
   usePomEvent,
@@ -25,7 +27,13 @@ const FEATURES = [
   { key: "events", icon: "06" },
   { key: "notifications", icon: "07" },
   { key: "store", icon: "08" },
+  { key: "loader", icon: "09" },
 ] as const;
+// The steps of the simulated install, each a third of the bar.
+const LOADER_STEPS = ["demo.loaderStep.download", "demo.loaderStep.unpack", "demo.loaderStep.configure"] as const;
+const LOADER_FAILS_AT = 60;
+
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 const MAX_EVENTS = 12;
 
 /** Stagger index for the reveal animations (`--i` in plugin.css). */
@@ -81,6 +89,39 @@ export function Tutorial() {
       setBusy(null);
     }
   }
+
+  /**
+   * A simulated install under POM's loader (host version 7): the generic
+   * pieces, then the installer bar step by step, then the puzzle completing.
+   * With `fail`, the install stops with an error; "Try again" on it publishes
+   * `loader.retry`, which runs the install again, this time to the end.
+   */
+  async function simulateInstall(fail: boolean) {
+    setBusy(fail ? "loaderFail" : "loader");
+    try {
+      const shown = await loader.show({ message: t("demo.loaderPreparing") });
+      if (shown.action === "failed") {
+        setLastResponse(shown);
+        return;
+      }
+      await wait(700);
+      for (let progress = 0; progress <= 100; progress += 4) {
+        const step = LOADER_STEPS[Math.min(Math.floor(progress / 34), LOADER_STEPS.length - 1)];
+        await loader.progress({ title: t("demo.loaderTitle"), progress, message: t(step) });
+        if (fail && progress >= LOADER_FAILS_AT) {
+          setLastResponse(await loader.error({ title: t("demo.loaderFailedTitle"), message: t("demo.loaderFailed") }));
+          return;
+        }
+        await wait(120);
+      }
+      setLastResponse(await loader.success({ title: t("demo.loaderDone") }));
+    } finally {
+      setBusy(null);
+    }
+  }
+  const retryInstall = useRef(simulateInstall);
+  retryInstall.current = simulateInstall;
+  useEffect(() => onLoaderRetry(() => void retryInstall.current(false)), []);
 
   async function loadBackendEvents() {
     setBackend((current) => ({ ...current, status: "loading" }));
@@ -194,6 +235,22 @@ export function Tutorial() {
                 }))}
               >
                 {t("demo.askDialog")}
+              </button>
+              <button
+                type="button"
+                className="pb-btn pb-btn-outline"
+                disabled={busy !== null}
+                onClick={() => void simulateInstall(false)}
+              >
+                {t("demo.loaderInstall")}
+              </button>
+              <button
+                type="button"
+                className="pb-btn pb-btn-outline"
+                disabled={busy !== null}
+                onClick={() => void simulateInstall(true)}
+              >
+                {t("demo.loaderFail")}
               </button>
             </div>
             <div className="pb-response" role="status" aria-live="polite">

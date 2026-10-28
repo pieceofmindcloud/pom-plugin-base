@@ -84,5 +84,17 @@
   "projects.loading": "Procurando projetos...",
   "projects.unavailable": "O workspace compartilhado não está disponível agora.",
   "projects.empty": "Nenhum projeto foi encontrado no workspace compartilhado ainda.",
-  "projects.count": "{count, plural, one {# projeto} other {# projetos}}"
+  "projects.count": "{count, plural, one {# projeto} other {# projetos}}",
+  "features.loader.title": "Loader e instalador",
+  "features.loader.body": "Instalando um runtime ou iniciando um processo? Mantenha o loader do POM sobre a tela com loader.show, loader.progress, loader.error e loader.success; o Tentar de novo volta como loader.retry.",
+  "demo.loaderInstall": "Simular uma instalação",
+  "demo.loaderFail": "Simular uma instalação com falha",
+  "demo.loaderPreparing": "Preparando a instalação",
+  "demo.loaderTitle": "Instalando o POM - Plugins",
+  "demo.loaderStep.download": "Baixando o runtime",
+  "demo.loaderStep.unpack": "Descompactando arquivos",
+  "demo.loaderStep.configure": "Configurando o plugin",
+  "demo.loaderFailedTitle": "Não foi possível instalar o POM - Plugins",
+  "demo.loaderFailed": "Uma falha simulada. Tentar de novo executa a instalação mais uma vez, até o fim.",
+  "demo.loaderDone": "POM - Plugins instalado"
 }
